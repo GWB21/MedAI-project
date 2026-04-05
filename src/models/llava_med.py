@@ -73,20 +73,22 @@ class LLavaMedModel(BaseMedVQAModel):
             full_prompt, self.tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt"
         )
         input_ids = input_ids.unsqueeze(0).to(self.device)
+        attention_mask = torch.ones_like(input_ids)
 
-        return input_ids, image_tensor
+        return input_ids, image_tensor, attention_mask
 
     # ------------------------------------------------------------------
     # Inference
     # ------------------------------------------------------------------
     def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
         full_prompt = self._build_prompt(prompt)
-        input_ids, image_tensor = self._prepare_inputs(image, full_prompt)
+        input_ids, image_tensor, attention_mask = self._prepare_inputs(image, full_prompt)
 
         with torch.no_grad():
             output_ids = self.model.generate(
                 input_ids,
                 images=image_tensor,
+                attention_mask=attention_mask,
                 do_sample=False,
                 temperature=0,
                 max_new_tokens=max_new_tokens,
@@ -112,12 +114,13 @@ class LLavaMedModel(BaseMedVQAModel):
     # ------------------------------------------------------------------
     def get_choice_logits(self, image: np.ndarray, prompt: str) -> Dict[str, float]:
         full_prompt = self._build_prompt(prompt)
-        input_ids, image_tensor = self._prepare_inputs(image, full_prompt)
+        input_ids, image_tensor, attention_mask = self._prepare_inputs(image, full_prompt)
 
         with torch.no_grad():
             outputs = self.model(
                 input_ids=input_ids,
                 images=image_tensor,
+                attention_mask=attention_mask,
                 return_dict=True,
             )
             next_logits = outputs.logits[:, -1, :]

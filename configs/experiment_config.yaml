@@ -1,80 +1,63 @@
-# ============================================================
-# Medical VQA Perturbation Experiment Configuration
-# All team members must use identical values from this file.
-# ============================================================
-
 dataset:
-  name: "PMC-VQA"
-  split: "test_clean"
-  data_dir: "./data/pmc_vqa"
-
+  name: PMC-VQA
+  split: test_clean
+  data_dir: ./data/pmc_vqa
 perturbations:
-  - name: "original"
-
-  - name: "black"
-
-  - name: "lpf"
-    # sigma: set after running calibrate_lpf.py (target SSIM ≈ 0.7)
-    # LPF and HPF are calibrated SEPARATELY -- each targets SSIM ≈ 0.7
-    sigma: null
-
-  - name: "hpf"
-    # HPF has its own sigma (calibrated independently from LPF)
-    sigma: null
-
-  - name: "patch_shuffle"
-    patch_size: 16
-    seed: 42
-
+- name: original
+- name: black
+- name: lpf
+  sigma: 3.0
+- name: hpf
+  sigma: 25.0
+- name: patch_shuffle
+  patch_size: 16
+  seed: 42
 decoding:
   temperature: 0
   do_sample: false
-  max_new_tokens: 32       # 4지선다 A/B/C/D 응답 -- 32면 충분 (파싱 가능한 최소한)
+  max_new_tokens: 32
   num_beams: 1
-
-# 데이터 로딩 설정 (팀원별 서버 사양에 맞게 조정)
 dataloader:
-  num_workers: 4           # CPU 코어 수에 맞게 조정 (8코어 -> 4, 16코어 -> 8)
-  prefetch_factor: 2       # num_workers > 0일 때만 적용
-
+  num_workers: 8
+  prefetch_factor: 2
 prompt:
-  template: |
-    {question}
-    A. {choice_A}
-    B. {choice_B}
-    C. {choice_C}
-    D. {choice_D}
-    Answer with the option's letter from the given choices directly.
+  template: '{question}
 
+    A. {choice_A}
+
+    B. {choice_B}
+
+    C. {choice_C}
+
+    D. {choice_D}
+
+    Answer with the option''s letter from the given choices directly.
+
+    '
 models:
   llava_med:
-    name: "LLaVA-Med-1.5"
-    hf_repo: "microsoft/llava-med-v1.5-mistral-7b"
-    precision: "fp16"
+    name: LLaVA-Med-1.5
+    hf_repo: microsoft/llava-med-v1.5-mistral-7b
+    precision: fp16
     batch_size: 1
-    max_new_tokens: 32     # 모델별 override 가능 (기본값: decoding.max_new_tokens)
-
+    max_new_tokens: 32
   huatuogpt:
-    name: "HuatuoGPT-Vision-7B"
-    hf_repo: "FreedomIntelligence/HuatuoGPT-Vision-7B"
-    precision: "bf16"
+    name: HuatuoGPT-Vision-7B
+    hf_repo: FreedomIntelligence/HuatuoGPT-Vision-7B
+    precision: bf16
     batch_size: 1
     max_new_tokens: 32
-
   medvint:
-    name: "MedVInT-TD"
-    hf_repo: "xmcmic/MedVInT-TD"
-    precision: "fp16"
+    name: MedVInT-TD
+    hf_repo: xmcmic/MedVInT-TD
+    precision: fp16
     batch_size: 1
     max_new_tokens: 32
-
 output:
-  dir: "./results"
+  dir: ./results
   save_logits: true
   save_raw_output: true
-
 seed: 42
-
 hardware:
   min_gpu_vram_gb: 24
-  recommended_gpu: "A6000 Ada (48GB)"
+  recommended_gpu: A6000 Ada (48GB)

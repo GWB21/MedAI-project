@@ -98,9 +98,29 @@ def calibrate(data_dir: str, target_ssim: float = 0.7, n_samples: int = 200):
     print("=" * 50)
     print(f"  LPF sigma: {best_lpf}  (SSIM = {lpf_mean[best_lpf]:.4f})")
     print(f"  HPF sigma: {best_hpf}  (SSIM = {hpf_mean[best_hpf]:.4f})")
-    print(f"\n--> Update configs/experiment_config.yaml:")
-    print(f"    lpf.sigma: {best_lpf}")
-    print(f"    hpf.sigma: {best_hpf}")
+
+    # --- Auto-save to config ---
+    config_path = os.path.join(os.path.dirname(data_dir), "..", "configs", "experiment_config.yaml")
+    config_path = os.path.normpath(config_path)
+    if os.path.exists(config_path):
+        import yaml
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        for p in config.get("perturbations", []):
+            if p["name"] == "lpf":
+                p["sigma"] = float(best_lpf)
+            elif p["name"] == "hpf":
+                p["sigma"] = float(best_hpf)
+        with open(config_path, "w") as f:
+            yaml.dump(config, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        print(f"\n  configs/experiment_config.yaml 자동 업데이트 완료!")
+        print(f"    lpf.sigma = {best_lpf}")
+        print(f"    hpf.sigma = {best_hpf}")
+    else:
+        print(f"\n  [WARN] config 파일을 찾을 수 없음: {config_path}")
+        print(f"  수동으로 입력하세요:")
+        print(f"    lpf.sigma: {best_lpf}")
+        print(f"    hpf.sigma: {best_hpf}")
 
     # --- Plot ---
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))

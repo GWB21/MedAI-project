@@ -46,3 +46,4 @@ Thumbs.db
 # Misc
 *.log
 calibration_curve.png
+results/*.png
