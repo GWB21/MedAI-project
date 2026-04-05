@@ -1,0 +1,5 @@
+# HuatuoGPT-Vision-7B 추가 의존성
+# 코드는 repos/HuatuoGPT-Vision 에서 import (pip 설치 아님)
+# git clone https://github.com/FreedomIntelligence/HuatuoGPT-Vision.git repos/HuatuoGPT-Vision
+
+# 추가 필요 패키지 없음 (base로 충분)

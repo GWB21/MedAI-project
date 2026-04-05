@@ -1,0 +1,5 @@
+# MedVInT-TD 추가 의존성
+# 코드는 repos/PMC-VQA 에서 import (pip 설치 아님)
+# git clone https://github.com/xiaoman-zhang/PMC-VQA.git repos/PMC-VQA
+
+einops>=0.7.0

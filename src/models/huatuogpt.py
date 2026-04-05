@@ -22,7 +22,8 @@ from typing import Dict
 from .base_model import BaseMedVQAModel, ModelOutput
 from ..parse_answer import parse_answer
 
-HUATUOGPT_REPO_PATH = os.environ.get("HUATUOGPT_REPO_PATH", "/tmp/HuatuoGPT-Vision")
+_DEFAULT_REPO = os.path.join(os.path.dirname(__file__), "..", "..", "repos", "HuatuoGPT-Vision")
+HUATUOGPT_REPO_PATH = os.environ.get("HUATUOGPT_REPO_PATH", os.path.abspath(_DEFAULT_REPO))
 
 
 class HuatuoGPTVisionModel(BaseMedVQAModel):

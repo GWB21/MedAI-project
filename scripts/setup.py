@@ -28,7 +28,7 @@ import time
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 DATA_DIR = os.path.join(PROJECT_ROOT, "data", "pmc_vqa")
 CHECKPOINT_DIR = os.path.join(PROJECT_ROOT, "checkpoints")
-PMC_VQA_REPO_PATH = "/tmp/PMC-VQA"
+PMC_VQA_REPO_PATH = os.path.join(PROJECT_ROOT, "repos", "PMC-VQA")
 
 
 def download_dataset(hf_token: str):
@@ -162,13 +162,14 @@ def setup_huatuogpt(hf_token: str):
     print("  HuatuoGPT-Vision-7B 셋업")
     print("=" * 50)
 
-    HUATUOGPT_REPO = "/tmp/HuatuoGPT-Vision"
+    HUATUOGPT_REPO = os.path.join(PROJECT_ROOT, "repos", "HuatuoGPT-Vision")
 
     # 1. HuatuoGPT-Vision 레포 클론 (모델 코드 필요)
     print(f"[1/2] HuatuoGPT-Vision 레포 클론 → {HUATUOGPT_REPO}")
     if os.path.exists(HUATUOGPT_REPO):
         print(f"  [SKIP] 이미 존재")
     else:
+        os.makedirs(os.path.dirname(HUATUOGPT_REPO), exist_ok=True)
         subprocess.run(
             ["git", "clone", "--depth", "1",
              "https://github.com/FreedomIntelligence/HuatuoGPT-Vision.git",
@@ -222,14 +223,31 @@ def setup_medvint(hf_token: str):
         )
         print("  완료.")
 
-    # PMC-LLaMA 베이스 모델도 필요
-    print("[추가] PMC-LLaMA 베이스 모델 다운로드 중...")
-    from huggingface_hub import snapshot_download
+    # PMC-LLaMA 베이스 모델
+    print("[추가 1/2] PMC-LLaMA 베이스 모델 다운로드 중...")
+    from huggingface_hub import snapshot_download, hf_hub_download
     snapshot_download(
         repo_id="chaoyi-wu/PMC_LLAMA_7B",
         token=hf_token,
     )
     print("  완료.")
+
+    # PMC-CLIP 비전 인코더 체크포인트
+    pmc_clip_dir = os.path.join(CHECKPOINT_DIR, "PMC-CLIP")
+    pmc_clip_path = os.path.join(pmc_clip_dir, "checkpoint.pt")
+    if os.path.exists(pmc_clip_path):
+        print(f"[추가 2/2] [SKIP] PMC-CLIP 이미 존재: {pmc_clip_path}")
+    else:
+        print("[추가 2/2] PMC-CLIP 체크포인트 다운로드 중 (~2.4GB)...")
+        os.makedirs(pmc_clip_dir, exist_ok=True)
+        hf_hub_download(
+            repo_id="axiong/pmc_oa_beta",
+            filename="checkpoint.pt",
+            repo_type="dataset",
+            local_dir=pmc_clip_dir,
+            token=hf_token,
+        )
+        print("  완료.")
 
 
 # ─── 메인 ───

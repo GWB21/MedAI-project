@@ -1,0 +1,10 @@
+# LLaVA-Med-1.5 추가 의존성
+# 반드시 --no-deps 로 설치 (torch 버전 충돌 방지)
+# pip install git+https://github.com/haotian-liu/LLaVA.git --no-deps
+
+# LLaVA가 내부적으로 필요한 패키지 (base에 이미 포함된 것 제외)
+shortuuid
+httpx
+uvicorn
+fastapi
+markdown2

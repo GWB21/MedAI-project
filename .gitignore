@@ -3,8 +3,9 @@ data/pmc_vqa/
 data/*.zip
 *.zip
 
-# Model checkpoints
+# Model checkpoints & cloned repos
 checkpoints/
+repos/
 *.bin
 *.pt
 *.pth

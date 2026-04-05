@@ -146,7 +146,13 @@ def _run_single_condition(
             })
             continue
 
-        pred = output.parsed_answer if output.parse_success else "PARSE_FAIL"
+        # Logit-based fallback: if parsing fails, use argmax of logits
+        if output.parse_success:
+            pred = output.parsed_answer
+        elif output.logits and not all(v != v for v in output.logits.values()):  # has valid logits
+            pred = max(output.logits, key=output.logits.get)
+        else:
+            pred = "PARSE_FAIL"
         correct = 1 if pred == item["gt_answer"] else 0
 
         results.append({
