@@ -107,6 +107,13 @@ class MedVInTModel(BaseMedVQAModel):
             args.Vision_module = "CLIP"
             args.visual_model_path = "openai/clip-vit-large-patch14"
 
+        # PyTorch 2.6+: weights_only=True 기본값 → PMC-CLIP numpy 호환 위해 전역 패치
+        import functools
+        _orig_torch_load = torch.load
+        if not hasattr(_orig_torch_load, '_patched'):
+            torch.load = functools.partial(_orig_torch_load, weights_only=False)
+            torch.load._patched = True
+
         # Load model
         from models.QA_model import QA_model
         self.model = QA_model(args)
@@ -175,55 +182,106 @@ class MedVInTModel(BaseMedVQAModel):
         return None
 
     # ------------------------------------------------------------------
-    # Image preprocessing
+    # Image preprocessing (원본 PMC_QA_Dataset Test 모드와 동일)
     # ------------------------------------------------------------------
     def _process_image(self, pil_image: Image.Image) -> torch.Tensor:
         from torchvision import transforms
+        normalize = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         transform = transforms.Compose([
-            transforms.Resize((224, 224)),
+            transforms.Resize((512, 512), interpolation=Image.BICUBIC),
             transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.48145466, 0.4578275, 0.40821073],
-                std=[0.26862954, 0.26130258, 0.27577711],
-            ),
+            normalize,
         ])
         return transform(pil_image.convert("RGB")).unsqueeze(0).to(self.device)
 
     # ------------------------------------------------------------------
-    # Inference
+    # Build prompt (원본 PMC_QA_Dataset choice 형식)
+    # ------------------------------------------------------------------
+    def build_prompt(self, question: str, choice_A: str, choice_B: str, choice_C: str, choice_D: str) -> str:
+        """원본 형식: 'Question: {Q}Choices: {A}{B}{C}{D}The Answer is:'"""
+        combined = choice_A + choice_B + choice_C + choice_D
+        return f"Question: {question}Choices:{combined}The Answer is:"
+
+    # ------------------------------------------------------------------
+    # Inference (원본 test.py 방식: generate → argmax → 마지막 글자 → 선택지 매칭)
     # ------------------------------------------------------------------
     def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
-        logits = self.get_choice_logits(image, prompt)
-        pred = max(logits, key=logits.get)
+        import difflib
+
+        pil_image = Image.fromarray(image)
+        image_tensor = self._process_image(pil_image)
+        input_ids = self.tokenizer(prompt, return_tensors="pt")["input_ids"].to(self.device)
+
+        with torch.no_grad():
+            # model.generate() returns logits (single forward, NOT autoregressive)
+            generation_logits = self.model.generate(input_ids, image_tensor)
+            pred_ids = generation_logits.argmax(-1)
+            raw_text = self.tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
+
+        # 원본 방식: 마지막 글자로 답변 결정
+        pred_char = raw_text[-1] if raw_text else ""
+
+        # 선택지 텍스트 추출 (프롬프트에서)
+        choices = self._extract_choices(prompt)
+        if choices:
+            idx = self._find_most_similar_index(choices, pred_char)
+            pred = ["A", "B", "C", "D"][idx] if idx is not None else "A"
+        else:
+            pred = pred_char.upper() if pred_char.upper() in ("A", "B", "C", "D") else "A"
+
+        # logit도 추출 (분석용)
+        logits = self._get_choice_logits_from_generation(generation_logits)
 
         return ModelOutput(
-            raw_text="",
+            raw_text=raw_text,
             parsed_answer=pred,
             logits=logits,
             parse_success=True,
         )
 
+    def _extract_choices(self, prompt: str):
+        """프롬프트에서 A~D 선택지 텍스트 추출"""
+        import re
+        choices = []
+        for letter in ("A", "B", "C", "D"):
+            match = re.search(rf'{letter}\.\s*(.+?)(?:\n|$)', prompt)
+            if match:
+                choices.append(match.group(1).strip())
+        return choices if len(choices) == 4 else None
+
+    def _find_most_similar_index(self, str_list, target_str):
+        """원본 test.py의 find_most_similar_index 그대로"""
+        import difflib
+        best_idx, best_sim = 0, 0
+        for i, s in enumerate(str_list):
+            sim = difflib.SequenceMatcher(None, s, target_str).ratio()
+            if sim > best_sim:
+                best_sim = sim
+                best_idx = i
+        return best_idx
+
+    def _get_choice_logits_from_generation(self, generation_logits) -> Dict[str, float]:
+        """generate() 결과에서 마지막 위치의 A/B/C/D logit 추출"""
+        try:
+            last_logits = generation_logits[:, -1, :]
+            choice_logits = {}
+            for choice in ("A", "B", "C", "D"):
+                token_id = self.tokenizer.encode(choice, add_special_tokens=False)[-1]
+                choice_logits[choice] = last_logits[0, token_id].item()
+            return choice_logits
+        except Exception:
+            return {"A": float("nan"), "B": float("nan"), "C": float("nan"), "D": float("nan")}
+
     # ------------------------------------------------------------------
-    # Logit extraction
+    # Logit extraction (standalone, for compatibility)
     # ------------------------------------------------------------------
     def get_choice_logits(self, image: np.ndarray, prompt: str) -> Dict[str, float]:
         pil_image = Image.fromarray(image)
         image_tensor = self._process_image(pil_image)
         input_ids = self.tokenizer(prompt, return_tensors="pt")["input_ids"].to(self.device)
-
-        try:
-            with torch.no_grad():
-                # forward returns CausalLMOutputWithPast with .loss and .logits
-                outputs = self.model(input_ids, image_tensor)
-                next_logits = outputs.logits[:, -1, :]
-
-            choice_logits = {}
-            for choice in ("A", "B", "C", "D"):
-                token_id = self.tokenizer.encode(choice, add_special_tokens=False)[-1]
-                choice_logits[choice] = next_logits[0, token_id].item()
-            return choice_logits
-        except Exception:
-            return {"A": float("nan"), "B": float("nan"), "C": float("nan"), "D": float("nan")}
+        with torch.no_grad():
+            generation_logits = self.model.generate(input_ids, image_tensor)
+        return self._get_choice_logits_from_generation(generation_logits)
 
     @property
     def name(self) -> str:

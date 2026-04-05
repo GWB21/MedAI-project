@@ -106,7 +106,14 @@ def _run_single_condition(
 
     for idx in tqdm(range(len(dataset)), desc=condition):
         item = dataset[idx]
-        prompt = dataset.get_prompt(idx)
+        # MedVInT uses its own prompt format (원본 PMC_QA_Dataset 형식)
+        if hasattr(model, 'build_prompt'):
+            prompt = model.build_prompt(
+                item["question"], item["choice_A"], item["choice_B"],
+                item["choice_C"], item["choice_D"]
+            )
+        else:
+            prompt = dataset.get_prompt(idx)
 
         try:
             image = dataset.load_image(idx)
