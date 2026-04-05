@@ -1,18 +1,17 @@
 # Data
 data/pmc_vqa/
-data/*.zip
 *.zip
 
 # Model checkpoints & cloned repos
 checkpoints/
 repos/
-*.bin
-*.pt
-*.pth
-*.safetensors
 
-# Results (keep structure, ignore large outputs)
+# Model weights cache
+.hf_home/
+
+# Results (keep structure)
 results/*.csv
+results/*.png
 !results/.gitkeep
 
 # Python
@@ -21,30 +20,23 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-.eggs/
 
 # Environment
 .env
 *.env
 .venv/
 venv/
-env/
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*.swo
 *~
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Jupyter
-.ipynb_checkpoints/
-
 # Misc
 *.log
 calibration_curve.png
-results/*.png

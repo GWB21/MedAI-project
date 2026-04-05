@@ -1,5 +1,5 @@
-# MedVInT-TD 추가 의존성
-# 코드는 repos/PMC-VQA 에서 import (pip 설치 아님)
-# git clone https://github.com/xiaoman-zhang/PMC-VQA.git repos/PMC-VQA
-
-einops>=0.7.0
+# MedVInT-TD 전용
+# 1. 먼저 base 설치: pip install -r requirements_base.txt
+# 2. transformers 4.44 설치: pip install transformers==4.44.0
+# 3. 레포 클론 + 체크포인트: setup.py가 자동으로 처리
+transformers==4.44.0

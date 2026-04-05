@@ -1,8 +1,5 @@
-# 공통 의존성 (모든 팀원 필수)
-# CUDA 12.4+ 기준 torch 설치: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 torch>=2.2.0
 torchvision>=0.17.0
-transformers>=4.40.0
 accelerate>=0.25.0
 Pillow>=10.0.0
 numpy>=1.24.0

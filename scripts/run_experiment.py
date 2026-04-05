@@ -25,6 +25,12 @@ def main():
     parser.add_argument("--config", default="configs/experiment_config.yaml")
     parser.add_argument("--conditions", nargs="+", default=None,
                         help="Run specific conditions only (default: all)")
+    parser.add_argument("--batch_size", type=int, default=1,
+                        help="Batch size (adjust by VRAM, default: 1)")
+    parser.add_argument("--num_workers", type=int, default=8,
+                        help="DataLoader num_workers (adjust by CPU cores, default: 8)")
+    parser.add_argument("--max_new_tokens", type=int, default=None,
+                        help="Max new tokens to generate (overrides config, default: 32)")
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
@@ -72,13 +78,17 @@ def main():
     # Run inference
     from src.inference import run_inference
 
-    # max_new_tokens: 모델별 설정 > 전역 설정 > 기본값 32
-    model_cfg = config.get("models", {}).get(args.model, {})
-    max_new_tokens = model_cfg.get(
-        "max_new_tokens",
-        config.get("decoding", {}).get("max_new_tokens", 32)
-    )
+    # max_new_tokens: CLI > 모델별 설정 > 전역 설정 > 기본값 32
+    if args.max_new_tokens is not None:
+        max_new_tokens = args.max_new_tokens
+    else:
+        model_cfg = config.get("models", {}).get(args.model, {})
+        max_new_tokens = model_cfg.get(
+            "max_new_tokens",
+            config.get("decoding", {}).get("max_new_tokens", 32)
+        )
     print(f"max_new_tokens: {max_new_tokens}")
+    print(f"batch_size: {args.batch_size} | num_workers: {args.num_workers}")
 
     patch_cfg = next((p for p in config["perturbations"] if p["name"] == "patch_shuffle"), {})
     df = run_inference(

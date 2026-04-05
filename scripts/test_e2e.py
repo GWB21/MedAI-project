@@ -58,8 +58,10 @@ def run_inference(img_np, prompt_text):
     ids = tokenizer_image_token(full_prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(model.device)
     attn = torch.ones_like(ids)
     with torch.no_grad():
-        out = model.generate(ids, images=img_t, attention_mask=attn, do_sample=False, temperature=0, max_new_tokens=32, num_beams=1)
-        raw = tokenizer.decode(out[0, ids.shape[1]:], skip_special_tokens=True).strip()
+        out = model.generate(ids, images=img_t, attention_mask=attn, do_sample=False, max_new_tokens=32, num_beams=1)
+        full_text = tokenizer.decode(out[0], skip_special_tokens=True)
+        input_text = full_prompt.replace(DEFAULT_IMAGE_TOKEN, '').strip()
+        raw = full_text[full_text.index(input_text)+len(input_text):].strip() if input_text in full_text else full_text.strip()
         outputs = model(input_ids=ids, images=img_t, attention_mask=attn, return_dict=True)
         logits_last = outputs.logits[:, -1, :]
     choice_logits = {{}}
@@ -153,7 +155,9 @@ def run_inference(img_np, prompt_text):
     ids = tokenize_with_image(fp).unsqueeze(0).to('cuda')
     with torch.no_grad():
         out = model.generate(ids, images=it, do_sample=False, max_new_tokens=32, num_beams=1, use_cache=True, eos_token_id=tokenizer.eos_token_id, pad_token_id=tokenizer.eos_token_id)
-        raw = tokenizer.decode(out[0, ids.shape[1]:], skip_special_tokens=True).strip()
+        full_text = tokenizer.decode(out[0], skip_special_tokens=True)
+        input_text = fp.replace('<image>', '').strip()
+        raw = full_text[full_text.index(input_text)+len(input_text):].strip() if input_text in full_text else full_text.strip()
         outputs = model(input_ids=ids, images=it, return_dict=True)
         ll = outputs.logits[:, -1, :]
     cl = {{}}

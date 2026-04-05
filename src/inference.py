@@ -146,13 +146,20 @@ def _run_single_condition(
             })
             continue
 
-        # Logit-based fallback: if parsing fails, use argmax of logits
-        if output.parse_success:
-            pred = output.parsed_answer
-        elif output.logits and not all(v != v for v in output.logits.values()):  # has valid logits
+        # Primary: logit argmax (A/B/C/D 토큰의 logit 비교)
+        # Fallback: text parsing (logit이 없는 경우에만)
+        has_valid_logits = (
+            output.logits
+            and not all(v != v for v in output.logits.values())
+        )
+        if has_valid_logits:
             pred = max(output.logits, key=output.logits.get)
+        elif output.parse_success:
+            pred = output.parsed_answer
         else:
             pred = "PARSE_FAIL"
+
+        # parse_success는 텍스트 파싱 성공 여부 (분석용으로 보존)
         correct = 1 if pred == item["gt_answer"] else 0
 
         results.append({

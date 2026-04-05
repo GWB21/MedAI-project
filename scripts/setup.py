@@ -156,6 +156,36 @@ def setup_llava_med(hf_token: str):
     print("  완료. (HuggingFace cache에 저장됨)")
 
 
+def patch_huatuogpt_forward(huatuogpt_repo: str):
+    """Patch HuatuoGPT forward() for transformers 4.44+ compatibility.
+
+    transformers 4.44+에서 forward()에 추가 kwargs가 전달되므로,
+    **kwargs를 시그니처에 추가해야 합니다.
+    """
+    filepath = os.path.join(huatuogpt_repo, "llava", "model", "language_model", "llava_qwen2.py")
+    if not os.path.exists(filepath):
+        print(f"  [WARN] 패치 대상 파일 없음: {filepath}")
+        return
+
+    with open(filepath) as f:
+        content = f.read()
+
+    if "**kwargs," in content.split("def forward(")[1].split("def ")[0] if "def forward(" in content else "":
+        print("  [SKIP] forward() 이미 패치됨")
+        return
+
+    old = "        return_dict: Optional[bool] = None,\n    ) -> Union[Tuple, CausalLMOutputWithPast]:"
+    new = "        return_dict: Optional[bool] = None,\n        **kwargs,\n    ) -> Union[Tuple, CausalLMOutputWithPast]:"
+
+    if old in content:
+        content = content.replace(old, new)
+        with open(filepath, "w") as f:
+            f.write(content)
+        print("  [PATCH] forward() kwargs 호환성 패치 완료")
+    else:
+        print("  [WARN] 패치 패턴을 찾을 수 없음 (이미 패치되었거나 코드가 변경됨)")
+
+
 def setup_huatuogpt(hf_token: str):
     """HuatuoGPT-Vision-7B 셋업"""
     print("\n" + "=" * 50)
@@ -177,6 +207,9 @@ def setup_huatuogpt(hf_token: str):
             check=True,
         )
         print("  완료.")
+
+    # 1.5. transformers 4.44+ 호환성 패치
+    patch_huatuogpt_forward(HUATUOGPT_REPO)
 
     # 2. 모델 가중치 다운로드
     print("[2/2] HuatuoGPT-Vision-7B 모델 가중치 다운로드 중...")

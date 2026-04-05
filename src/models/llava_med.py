@@ -96,9 +96,15 @@ class LLavaMedModel(BaseMedVQAModel):
                 use_cache=True,
             )
 
-        raw_text = self.tokenizer.decode(
-            output_ids[0, input_ids.shape[1] :], skip_special_tokens=True
-        ).strip()
+        # Image token expands from 1 to ~576 embeddings internally,
+        # so we decode the full output and strip the input prompt portion
+        full_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
+        from llava.constants import DEFAULT_IMAGE_TOKEN
+        input_text = full_prompt.replace(DEFAULT_IMAGE_TOKEN, "").strip()
+        if input_text in full_text:
+            raw_text = full_text[full_text.index(input_text) + len(input_text) :].strip()
+        else:
+            raw_text = full_text.strip()
         parsed = parse_answer(raw_text)
         logits = self.get_choice_logits(image, prompt)
 
