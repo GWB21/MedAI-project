@@ -112,7 +112,6 @@ python scripts/run_experiment.py --model {모델명} --gpu 0
 | `--gpu` | `0` | GPU 번호 |
 | `--batch_size` | `1` | 배치 크기 (VRAM에 따라 조정) |
 | `--num_workers` | `8` | CPU 데이터 로더 수 (코어 수에 맞게) |
-| `--max_new_tokens` | `32` | 최대 생성 토큰 수 |
 | `--conditions` | 전체 | 특정 조건만 실행: `--conditions original black` |
 | `--config` | `configs/experiment_config.yaml` | 설정 파일 경로 |
 
@@ -134,26 +133,33 @@ python scripts/run_experiment.py --model llava_med --gpu 0
 # 특정 조건만
 python scripts/run_experiment.py --model huatuogpt --gpu 0 --conditions original black
 
-# 토큰 수 조정
-python scripts/run_experiment.py --model medvint --gpu 0 --max_new_tokens 64
+# 배치/워커 조정
+python scripts/run_experiment.py --model medvint --gpu 0 --batch_size 2 --num_workers 4
 ```
+
+### 예상 소요시간
+
+텍스트 생성(generate) 없이 **forward 1회로 logit만 추출**하므로 매우 빠릅니다.
+
+| GPU | 조건당 (~2,000 samples) | 전체 (5개 조건) |
+|-----|----------------------|----------------|
+| RTX 3090/4090 | ~2분 | **~10분** |
+| A6000 Ada | ~1.5분 | **~8분** |
 
 ---
 
 ## 답변 결정 방식
 
-모든 모델에서 **logit argmax** 방식을 기본으로 사용합니다:
+모든 모델에서 **logit argmax** 방식을 사용합니다. 텍스트 생성(generate)은 하지 않습니다.
 
-1. 모델이 다음 토큰을 생성할 때, A/B/C/D 토큰 각각의 logit(비정규화 확률값)을 추출
-2. 가장 높은 logit을 가진 토큰이 모델의 예측 답변
-3. logit을 추출할 수 없는 경우에만 생성된 텍스트에서 파싱
+```
+입력: 이미지 + 프롬프트 → model.forward() 1회 → 마지막 위치 logit에서 A/B/C/D 비교 → argmax = 답변
+```
 
-이 방식의 장점:
-- 텍스트 파싱 실패(PARSE_FAIL)가 발생하지 않음
-- 모델의 실제 확률 분포를 직접 반영
-- 모든 모델에서 일관된 비교 가능
-
-CSV에는 `raw_output`(생성된 텍스트)과 `parse_success`(텍스트 파싱 성공 여부)도 함께 저장되어 분석에 활용할 수 있습니다.
+- `model.generate()` (autoregressive, ~32 forward passes) 대신 `model.forward()` **1회**만 실행
+- VRAM 사용량 적음 (KV cache 불필요), 추론 속도 ~30배 빠름
+- 텍스트 파싱 실패(PARSE_FAIL)가 원천적으로 발생하지 않음
+- 모델의 실제 확률 분포를 직접 반영하여 모든 모델에서 일관된 비교 가능
 
 ---
 
