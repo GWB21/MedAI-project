@@ -193,35 +193,14 @@ class MedVInTModel(BaseMedVQAModel):
     # Inference
     # ------------------------------------------------------------------
     def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
-        pil_image = Image.fromarray(image)
-        image_tensor = self._process_image(pil_image)
-
-        input_ids = self.tokenizer(prompt, return_tensors="pt")["input_ids"].to(self.device)
-
-        with torch.no_grad():
-            # model.generate() returns logits (not generated tokens!)
-            generation_logits = self.model.generate(input_ids, image_tensor)
-            # Decode: argmax over vocab at each position
-            pred_ids = generation_logits.argmax(-1)
-            raw_text = self.tokenizer.decode(pred_ids[0], skip_special_tokens=True).strip()
-
-        # MedVInT's original parsing: take the last character
-        # But we use our parser for consistency
-        parsed = parse_answer(raw_text)
-
-        # Also try the original method: last char
-        if parsed is None and raw_text:
-            last_char = raw_text[-1].upper()
-            if last_char in ("A", "B", "C", "D"):
-                parsed = last_char
-
         logits = self.get_choice_logits(image, prompt)
+        pred = max(logits, key=logits.get)
 
         return ModelOutput(
-            raw_text=raw_text,
-            parsed_answer=parsed if parsed else "PARSE_FAIL",
+            raw_text="",
+            parsed_answer=pred,
             logits=logits,
-            parse_success=parsed is not None,
+            parse_success=True,
         )
 
     # ------------------------------------------------------------------

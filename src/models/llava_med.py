@@ -81,38 +81,14 @@ class LLavaMedModel(BaseMedVQAModel):
     # Inference
     # ------------------------------------------------------------------
     def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
-        full_prompt = self._build_prompt(prompt)
-        input_ids, image_tensor, attention_mask = self._prepare_inputs(image, full_prompt)
-
-        with torch.no_grad():
-            output_ids = self.model.generate(
-                input_ids,
-                images=image_tensor,
-                attention_mask=attention_mask,
-                do_sample=False,
-                temperature=0,
-                max_new_tokens=max_new_tokens,
-                num_beams=1,
-                use_cache=True,
-            )
-
-        # Image token expands from 1 to ~576 embeddings internally,
-        # so we decode the full output and strip the input prompt portion
-        full_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        from llava.constants import DEFAULT_IMAGE_TOKEN
-        input_text = full_prompt.replace(DEFAULT_IMAGE_TOKEN, "").strip()
-        if input_text in full_text:
-            raw_text = full_text[full_text.index(input_text) + len(input_text) :].strip()
-        else:
-            raw_text = full_text.strip()
-        parsed = parse_answer(raw_text)
         logits = self.get_choice_logits(image, prompt)
+        pred = max(logits, key=logits.get)
 
         return ModelOutput(
-            raw_text=raw_text,
-            parsed_answer=parsed if parsed else "PARSE_FAIL",
+            raw_text="",
+            parsed_answer=pred,
             logits=logits,
-            parse_success=parsed is not None,
+            parse_success=True,
         )
 
     # ------------------------------------------------------------------

@@ -154,39 +154,14 @@ class HuatuoGPTVisionModel(BaseMedVQAModel):
     # Inference
     # ------------------------------------------------------------------
     def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
-        pil_image = Image.fromarray(image)
-        image_tensor = self._process_image(pil_image).unsqueeze(0)
-
-        full_prompt = self._build_prompt(prompt)
-        input_ids = self._tokenize_with_image(full_prompt).unsqueeze(0).to(self.device)
-
-        with torch.no_grad():
-            output_ids = self.model.generate(
-                input_ids,
-                images=image_tensor,
-                do_sample=False,
-                max_new_tokens=max_new_tokens,
-                num_beams=1,
-                use_cache=True,
-                eos_token_id=self.tokenizer.eos_token_id,
-                pad_token_id=self.tokenizer.eos_token_id,
-            )
-
-        # Image token expands internally, so decode full and strip prompt
-        full_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True)
-        input_text = full_prompt.replace("<image>", "").strip()
-        if input_text in full_text:
-            raw_text = full_text[full_text.index(input_text) + len(input_text):].strip()
-        else:
-            raw_text = full_text.strip()
-        parsed = parse_answer(raw_text)
         logits = self.get_choice_logits(image, prompt)
+        pred = max(logits, key=logits.get)
 
         return ModelOutput(
-            raw_text=raw_text,
-            parsed_answer=parsed if parsed else "PARSE_FAIL",
+            raw_text="",
+            parsed_answer=pred,
             logits=logits,
-            parse_success=parsed is not None,
+            parse_success=True,
         )
 
     # ------------------------------------------------------------------
