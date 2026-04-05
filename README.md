@@ -17,8 +17,8 @@
 |-----------|-------------|
 | **Original** | 원본 이미지 그대로 |
 | **Black** | 모든 픽셀 0 (검정 이미지) — 이미지 정보 완전 제거 |
-| **LPF** | Gaussian Low-Pass Filter (sigma calibrated to SSIM ≈ 0.7) — 고주파 디테일 제거 |
-| **HPF** | High-Pass Filter (Original - LPF + 128) — 저주파 구조 제거, 엣지만 보존 |
+| **LPF** | Gaussian Low-Pass Filter (sigma calibrated independently to SSIM ≈ 0.7) — 고주파 디테일 제거 |
+| **HPF** | High-Pass Filter, Original - LPF + 128 (sigma calibrated independently to SSIM ≈ 0.7) — 저주파 구조 제거, 엣지만 보존 |
 | **Patch Shuffle** | 16×16 패치 위치를 무작위 셔플 — 전역 구조 파괴, 로컬 텍스처 보존 |
 
 ### Diagnostic Metrics
@@ -63,7 +63,7 @@ bash data/download_data.sh
 
 ```bash
 python scripts/calibrate_lpf.py --data_dir ./data/pmc_vqa --target_ssim 0.7
-# 결과로 나온 sigma 값을 configs/experiment_config.yaml에 기입
+# LPF와 HPF 각각의 sigma가 출력됨 → configs/experiment_config.yaml에 기입
 ```
 
 ### 4. Model Verification (각 팀원)

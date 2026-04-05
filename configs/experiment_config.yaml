@@ -15,10 +15,11 @@ perturbations:
 
   - name: "lpf"
     # sigma: set after running calibrate_lpf.py (target SSIM ≈ 0.7)
+    # LPF and HPF are calibrated SEPARATELY -- each targets SSIM ≈ 0.7
     sigma: null
 
   - name: "hpf"
-    # Same sigma as LPF
+    # HPF has its own sigma (calibrated independently from LPF)
     sigma: null
 
   - name: "patch_shuffle"

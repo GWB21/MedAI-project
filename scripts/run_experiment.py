@@ -33,20 +33,26 @@ def main():
     with open(args.config) as f:
         config = yaml.safe_load(f)
 
-    # Determine sigma
-    sigma = None
+    # Determine separate sigmas for LPF and HPF
+    lpf_sigma = None
+    hpf_sigma = None
     for p in config["perturbations"]:
         if p["name"] == "lpf" and p.get("sigma") is not None:
-            sigma = p["sigma"]
-            break
+            lpf_sigma = p["sigma"]
+        if p["name"] == "hpf" and p.get("sigma") is not None:
+            hpf_sigma = p["sigma"]
 
     # Determine conditions
     conditions = args.conditions or [p["name"] for p in config["perturbations"]]
 
-    # Check sigma requirement
-    if any(c in ("lpf", "hpf") for c in conditions) and sigma is None:
-        print("ERROR: sigma is not set in config. Run calibrate_lpf.py first.")
-        print("       Or exclude lpf/hpf: --conditions original black patch_shuffle")
+    # Check sigma requirements
+    if "lpf" in conditions and lpf_sigma is None:
+        print("ERROR: lpf.sigma is not set in config. Run calibrate_lpf.py first.")
+        print("       Or exclude lpf: --conditions original black hpf patch_shuffle")
+        sys.exit(1)
+    if "hpf" in conditions and hpf_sigma is None:
+        print("ERROR: hpf.sigma is not set in config. Run calibrate_lpf.py first.")
+        print("       Or exclude hpf: --conditions original black lpf patch_shuffle")
         sys.exit(1)
 
     # Load dataset
@@ -72,7 +78,8 @@ def main():
         dataset=dataset,
         conditions=conditions,
         output_dir=config["output"]["dir"],
-        sigma=sigma,
+        lpf_sigma=lpf_sigma,
+        hpf_sigma=hpf_sigma,
         patch_size=patch_cfg.get("patch_size", 16),
         seed=config.get("seed", 42),
     )

@@ -25,12 +25,14 @@ def run_inference(
     dataset: PMCVQADataset,
     conditions: List[str],
     output_dir: str,
-    sigma: Optional[float] = None,
+    lpf_sigma: Optional[float] = None,
+    hpf_sigma: Optional[float] = None,
     patch_size: int = 16,
     seed: int = 42,
 ) -> pd.DataFrame:
     """
     Run inference for all conditions and save results.
+    LPF and HPF use separate sigma values (each calibrated to SSIM ≈ 0.7).
 
     Returns:
         Combined DataFrame with all results.
@@ -42,6 +44,14 @@ def run_inference(
         print(f"\n{'='*60}")
         print(f"  Model: {model.name} | Condition: {condition}")
         print(f"{'='*60}")
+
+        # Select the appropriate sigma for this condition
+        if condition == "lpf":
+            sigma = lpf_sigma
+        elif condition == "hpf":
+            sigma = hpf_sigma
+        else:
+            sigma = None
 
         results = _run_single_condition(
             model=model,
