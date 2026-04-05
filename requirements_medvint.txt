@@ -5,3 +5,4 @@
 #   3. python scripts/setup.py --model medvint --hf_token YOUR_TOKEN
 #      (레포 클론 + 체크포인트 + PMC-CLIP 자동 다운로드)
 transformers==4.40.0
+peft==0.11.0
