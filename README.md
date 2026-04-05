@@ -37,7 +37,7 @@
 ### 1. Environment Setup
 
 ```bash
-git clone https://github.com/object2021/MedAI-project.git
+git clone https://github.com/GWB21/MedAI-project.git
 cd MedAI-project
 pip install -r requirements.txt
 ```

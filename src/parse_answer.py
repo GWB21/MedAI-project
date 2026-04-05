@@ -22,8 +22,11 @@ def parse_answer(raw_output: str) -> Optional[str]:
     if raw.upper() in ("A", "B", "C", "D"):
         return raw.upper()
 
-    # Pattern 2: "The answer is X" / "The option is X"
+    # Pattern 2: "The answer is X" / "The option is X" / "X is correct"
     match = re.search(r"(?:answer|option)\s*(?:is|:)\s*([A-Da-d])", raw, re.IGNORECASE)
+    if match:
+        return match.group(1).upper()
+    match = re.search(r"\b([A-Da-d])\s+is\s+(?:correct|right|the answer)", raw, re.IGNORECASE)
     if match:
         return match.group(1).upper()
 
