@@ -4,7 +4,7 @@ Quick verification that each model loads and runs inference correctly.
 Uses a dummy image (random noise) -- NOT for actual experiment results.
 
 Usage:
-    python scripts/verify_models.py --model llava_med --gpu 0
+    python scripts/verify_models.py --model llava_v15 --gpu 0
     python scripts/verify_models.py --model huatuogpt --gpu 0
     python scripts/verify_models.py --model medvint --gpu 0
     python scripts/verify_models.py --model all --gpu 0
@@ -75,7 +75,7 @@ def verify_model(model_name: str) -> bool:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, choices=["llava_med", "huatuogpt", "medvint", "all"])
+    parser.add_argument("--model", required=True, choices=["llava_v15", "huatuogpt", "medvint", "all"])
     parser.add_argument("--gpu", type=int, default=0)
     args = parser.parse_args()
 
@@ -89,7 +89,7 @@ def main():
         print(f"VRAM: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
 
     if args.model == "all":
-        models = ["llava_med", "huatuogpt", "medvint"]
+        models = ["llava_v15", "huatuogpt", "medvint"]
     else:
         models = [args.model]
 

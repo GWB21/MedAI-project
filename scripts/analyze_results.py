@@ -4,7 +4,7 @@ Analyze experiment results from all models.
 
 Usage:
     python scripts/analyze_results.py --results results/*_all_*.csv
-    python scripts/analyze_results.py --results results/llava_med_all.csv results/huatuogpt_all.csv results/medvint_all.csv
+    python scripts/analyze_results.py --results results/llava_v15_all.csv results/huatuogpt_all.csv results/medvint_all.csv
 """
 
 import argparse

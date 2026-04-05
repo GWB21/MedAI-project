@@ -16,6 +16,7 @@ results/*.png
 
 # Python
 __pycache__/
+*.pyc
 *.py[cod]
 *.egg-info/
 dist/
@@ -23,9 +24,8 @@ build/
 
 # Environment
 .env
-*.env
-.venv/
 venv/
+.venv/
 
 # IDE
 .vscode/

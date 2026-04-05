@@ -1,5 +1,0 @@
-# LLaVA-Med-1.5 전용
-# 1. 먼저 base 설치: pip install -r requirements_base.txt
-# 2. transformers 4.37 설치: pip install transformers==4.37.2
-# 3. LLaVA 설치: pip install git+https://github.com/haotian-liu/LLaVA.git --no-deps
-transformers==4.37.2

@@ -4,7 +4,7 @@ End-to-End 테스트: 실제 PMC-VQA 이미지 + 5개 perturbation → 추론 �
 llava 모듈 충돌 방지를 위해 각 모델을 별도 subprocess로 실행.
 
 Usage:
-    python scripts/test_e2e.py --model llava_med
+    python scripts/test_e2e.py --model llava_v15
     python scripts/test_e2e.py --model huatuogpt
     python scripts/test_e2e.py --model medvint
     python scripts/test_e2e.py --model all
@@ -26,7 +26,7 @@ from src.dataset import PMCVQADataset
 from src.perturbations import apply_perturbation
 from src.parse_answer import parse_answer
 
-print("=== LLaVA-Med-1.5 E2E Test ===")
+print("=== LLaVA-v1.5-7B E2E Test ===")
 dataset = PMCVQADataset("{project_root}/data/pmc_vqa")
 image = dataset.load_image(0)
 prompt = dataset.get_prompt(0)
@@ -43,13 +43,13 @@ from PIL import Image
 
 t0 = time.time()
 tokenizer, model, image_processor, _ = load_pretrained_model(
-    model_path='microsoft/llava-med-v1.5-mistral-7b', model_base=None,
-    model_name='llava-med-v1.5-mistral-7b', device_map='auto')
+    model_path='liuhaotian/llava-v1.5-7b', model_base=None,
+    model_name='llava-v1.5-7b', device_map='auto')
 model.eval()
 print(f"Model loaded: {{time.time()-t0:.1f}}s")
 
 def run_inference(img_np, prompt_text):
-    conv = conv_templates['mistral_instruct'].copy()
+    conv = conv_templates['v1'].copy()
     conv.append_message(conv.roles[0], DEFAULT_IMAGE_TOKEN + '\\n' + prompt_text)
     conv.append_message(conv.roles[1], None)
     full_prompt = conv.get_prompt()
@@ -85,7 +85,7 @@ for cond_name, kwargs in conditions:
     logit_str = ' '.join(f'{{k}}={{vv:.2f}}' for k,vv in logits.items())
     print(f"  {{cond_name:15s}} | pred={{parsed or 'NONE':5s}} | gt={{item['gt_answer']}} | correct={{parsed==item['gt_answer']}} | raw={{repr(raw[:50])}} | {{logit_str}}")
 
-print("\\n>>> LLaVA-Med E2E: PASS <<<")
+print("\\n>>> LLaVA-v1.5 E2E: PASS <<<")
 '''
 
 TEST_HUATUOGPT = '''
@@ -291,7 +291,7 @@ print("\\n>>> MedVInT-TD E2E: PASS <<<")
 '''
 
 TESTS = {
-    "llava_med": TEST_LLAVA_MED,
+    "llava_v15": TEST_LLAVA_MED,
     "huatuogpt": TEST_HUATUOGPT,
     "medvint": TEST_MEDVINT,
 }
@@ -312,10 +312,10 @@ def run_test(model_name: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", required=True, choices=["llava_med", "huatuogpt", "medvint", "all"])
+    parser.add_argument("--model", required=True, choices=["llava_v15", "huatuogpt", "medvint", "all"])
     args = parser.parse_args()
 
-    models = ["llava_med", "huatuogpt", "medvint"] if args.model == "all" else [args.model]
+    models = ["llava_v15", "huatuogpt", "medvint"] if args.model == "all" else [args.model]
 
     results = {}
     for m in models:

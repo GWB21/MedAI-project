@@ -5,8 +5,8 @@
 데이터셋 다운로드 + 본인 담당 모델 다운로드를 한 번에 처리합니다.
 
 Usage:
-    # LLaVA-Med 담당자
-    python scripts/setup.py --model llava_med --hf_token YOUR_TOKEN
+    # LLaVA-v1.5 담당자
+    python scripts/setup.py --model llava_v15 --hf_token YOUR_TOKEN
 
     # HuatuoGPT-Vision 담당자
     python scripts/setup.py --model huatuogpt --hf_token YOUR_TOKEN
@@ -126,10 +126,10 @@ def verify_dataset():
 # ─── 모델 다운로드 함수들 ───
 
 
-def setup_llava_med(hf_token: str):
-    """LLaVA-Med-1.5 셋업"""
+def setup_llava_v15(hf_token: str):
+    """LLaVA-v1.5-7B 셋업"""
     print("\n" + "=" * 50)
-    print("  LLaVA-Med-1.5 셋업")
+    print("  LLaVA-v1.5-7B 셋업")
     print("=" * 50)
 
     # 1. llava 라이브러리 설치 (--no-deps: torch 버전 충돌 방지)
@@ -139,28 +139,27 @@ def setup_llava_med(hf_token: str):
         print("  [SKIP] llava 이미 설치됨")
     except ImportError:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q", "--no-deps",
-             "git+https://github.com/haotian-liu/LLaVA.git"],
+            [sys.executable, "-m", "pip", "install", "-q", "--no-deps", "llava"],
             check=True,
         )
         print("  완료.")
 
     # 2. 모델 가중치 다운로드 (transformers cache에 자동 저장)
-    print("[2/2] LLaVA-Med 모델 가중치 다운로드 중...")
-    print("       microsoft/llava-med-v1.5-mistral-7b (~14GB)")
+    print("[2/2] LLaVA-v1.5 모델 가중치 다운로드 중...")
+    print("       liuhaotian/llava-v1.5-7b (~14GB)")
     from huggingface_hub import snapshot_download
     snapshot_download(
-        repo_id="microsoft/llava-med-v1.5-mistral-7b",
+        repo_id="liuhaotian/llava-v1.5-7b",
         token=hf_token,
     )
     print("  완료. (HuggingFace cache에 저장됨)")
 
 
 def patch_huatuogpt_forward(huatuogpt_repo: str):
-    """Patch HuatuoGPT forward() for transformers 4.44+ compatibility.
+    """Patch HuatuoGPT forward() for transformers compatibility.
 
-    transformers 4.44+에서 forward()에 추가 kwargs가 전달되므로,
-    **kwargs를 시그니처에 추가해야 합니다.
+    일부 transformers 버전에서 forward()에 추가 kwargs가 전달되므로,
+    안전을 위해 **kwargs를 시그니처에 추가합니다.
     """
     filepath = os.path.join(huatuogpt_repo, "llava", "model", "language_model", "llava_qwen2.py")
     if not os.path.exists(filepath):
@@ -208,7 +207,7 @@ def setup_huatuogpt(hf_token: str):
         )
         print("  완료.")
 
-    # 1.5. transformers 4.44+ 호환성 패치
+    # 1.5. transformers 호환성 패치 (forward **kwargs)
     patch_huatuogpt_forward(HUATUOGPT_REPO)
 
     # 2. 모델 가중치 다운로드
@@ -287,7 +286,7 @@ def setup_medvint(hf_token: str):
 
 
 MODEL_SETUP = {
-    "llava_med": setup_llava_med,
+    "llava_v15": setup_llava_v15,
     "huatuogpt": setup_huatuogpt,
     "medvint": setup_medvint,
 }
@@ -299,7 +298,7 @@ def main():
     )
     parser.add_argument(
         "--model",
-        choices=["llava_med", "huatuogpt", "medvint"],
+        choices=["llava_v15", "huatuogpt", "medvint"],
         help="담당 모델 (생략하면 데이터셋만 다운로드)",
     )
     parser.add_argument(

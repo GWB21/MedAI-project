@@ -106,11 +106,11 @@ def _run_single_condition(
 
     for idx in tqdm(range(len(dataset)), desc=condition):
         item = dataset[idx]
-        # MedVInT uses its own prompt format (원본 PMC_QA_Dataset 형식)
+        # MedVInT uses its own prompt format with raw choices (접두사 포함)
         if hasattr(model, 'build_prompt'):
             prompt = model.build_prompt(
-                item["question"], item["choice_A"], item["choice_B"],
-                item["choice_C"], item["choice_D"]
+                item["question"], item["raw_choice_A"], item["raw_choice_B"],
+                item["raw_choice_C"], item["raw_choice_D"]
             )
         else:
             prompt = dataset.get_prompt(idx)
@@ -153,20 +153,13 @@ def _run_single_condition(
             })
             continue
 
-        # Primary: logit argmax (A/B/C/D 토큰의 logit 비교)
-        # Fallback: text parsing (logit이 없는 경우에만)
-        has_valid_logits = (
-            output.logits
-            and not all(v != v for v in output.logits.values())
-        )
-        if has_valid_logits:
-            pred = max(output.logits, key=output.logits.get)
-        elif output.parse_success:
+        # Primary: generate() 텍스트 파싱
+        # Logit은 CSV 기록용 (답변 결정에 사용하지 않음)
+        if output.parse_success:
             pred = output.parsed_answer
         else:
             pred = "PARSE_FAIL"
 
-        # parse_success는 텍스트 파싱 성공 여부 (분석용으로 보존)
         correct = 1 if pred == item["gt_answer"] else 0
 
         results.append({

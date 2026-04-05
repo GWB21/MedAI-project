@@ -3,7 +3,7 @@
 Main experiment runner.
 
 Usage:
-    python scripts/run_experiment.py --model llava_med --gpu 0
+    python scripts/run_experiment.py --model llava_v15 --gpu 0
     python scripts/run_experiment.py --model huatuogpt --gpu 0
     python scripts/run_experiment.py --model medvint --gpu 0
 """
@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 def main():
     parser = argparse.ArgumentParser(description="Medical VQA Perturbation Experiment")
-    parser.add_argument("--model", required=True, choices=["llava_med", "huatuogpt", "medvint"])
+    parser.add_argument("--model", required=True, choices=["llava_v15", "huatuogpt", "medvint"])
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument("--config", default="configs/experiment_config.yaml")
     parser.add_argument("--conditions", nargs="+", default=None,

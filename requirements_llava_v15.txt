@@ -1,0 +1,6 @@
+# LLaVA-v1.5-7B 전용
+# 설치 순서:
+#   1. pip install -r requirements_base.txt
+#   2. pip install -r requirements_llava_v15.txt
+#   3. pip install llava --no-deps
+transformers==4.37.2

@@ -35,9 +35,9 @@ prompt:
 
     '
 models:
-  llava_med:
-    name: LLaVA-Med-1.5
-    hf_repo: microsoft/llava-med-v1.5-mistral-7b
+  llava_v15:
+    name: LLaVA-v1.5-7B
+    hf_repo: liuhaotian/llava-v1.5-7b
     precision: fp16
     batch_size: 1
     max_new_tokens: 32
@@ -55,7 +55,6 @@ models:
     max_new_tokens: 32
 output:
   dir: ./results
-  save_logits: true
   save_raw_output: true
 seed: 42
 hardware:

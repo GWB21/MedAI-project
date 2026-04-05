@@ -5,7 +5,7 @@ Run this FIRST before anything else. Reports what's ready and what's missing.
 
 Usage:
     python scripts/setup_check.py
-    python scripts/setup_check.py --model llava_med   # also check model-specific deps
+    python scripts/setup_check.py --model llava_v15   # also check model-specific deps
 """
 
 import argparse
@@ -34,7 +34,7 @@ REQUIRED_PACKAGES = [
 ]
 
 MODEL_DEPS = {
-    "llava_med": [("llava", "llava (pip install git+https://github.com/haotian-liu/LLaVA.git)")],
+    "llava_v15": [("llava", "llava (pip install git+https://github.com/haotian-liu/LLaVA.git)")],
     "huatuogpt": [],  # uses trust_remote_code
     "medvint": [],     # uses cloned repo
 }
@@ -147,7 +147,7 @@ def check_model_deps(model_name: str):
     print(f"\n[6] Model-Specific: {model_name}")
     print("-" * 50)
 
-    if model_name == "llava_med":
+    if model_name == "llava_v15":
         try:
             import llava
             print("  [OK]   llava library installed")
@@ -184,7 +184,7 @@ def check_model_deps(model_name: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", choices=["llava_med", "huatuogpt", "medvint"], default=None)
+    parser.add_argument("--model", choices=["llava_v15", "huatuogpt", "medvint"], default=None)
     args = parser.parse_args()
 
     print("=" * 50)

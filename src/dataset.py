@@ -51,13 +51,27 @@ class PMCVQADataset:
         return {
             "image_id": Path(row["Figure_path"]).stem,
             "image_path": str(image_path),
-            "question": row["Question"],
-            "choice_A": row["Choice A"],
-            "choice_B": row["Choice B"],
-            "choice_C": row["Choice C"],
-            "choice_D": row["Choice D"],
+            "question": row["Question"].strip(),
+            "choice_A": self._clean_choice(row["Choice A"]),
+            "choice_B": self._clean_choice(row["Choice B"]),
+            "choice_C": self._clean_choice(row["Choice C"]),
+            "choice_D": self._clean_choice(row["Choice D"]),
+            # 원본 선택지 (MedVInT처럼 접두사 포함 형식이 필요한 모델용)
+            "raw_choice_A": str(row["Choice A"]).strip(),
+            "raw_choice_B": str(row["Choice B"]).strip(),
+            "raw_choice_C": str(row["Choice C"]).strip(),
+            "raw_choice_D": str(row["Choice D"]).strip(),
             "gt_answer": row["Answer_label"].strip().upper(),
         }
+
+    @staticmethod
+    def _clean_choice(text: str) -> str:
+        """Remove leading letter prefix like ' A:', ' B:' from choice text."""
+        import re
+        text = str(text).strip()
+        # Remove patterns like "A:", "B:", " A:", " B:" at the start
+        text = re.sub(r'^[A-D]\s*:\s*', '', text)
+        return text.strip()
 
     def _resolve_image_path(self, fig_path: str) -> Path:
         """Try multiple locations for the image file."""
