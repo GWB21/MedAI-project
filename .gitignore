@@ -9,8 +9,7 @@ repos/
 # Model weights cache
 .hf_home/
 
-# Results (keep structure)
-results/*.csv
+# Results
 results/*.png
 !results/.gitkeep
 
