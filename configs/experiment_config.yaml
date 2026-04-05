@@ -1,0 +1,71 @@
+# ============================================================
+# Medical VQA Perturbation Experiment Configuration
+# All team members must use identical values from this file.
+# ============================================================
+
+dataset:
+  name: "PMC-VQA"
+  split: "test_clean"
+  data_dir: "./data/pmc_vqa"
+
+perturbations:
+  - name: "original"
+
+  - name: "black"
+
+  - name: "lpf"
+    # sigma: set after running calibrate_lpf.py (target SSIM ≈ 0.7)
+    sigma: null
+
+  - name: "hpf"
+    # Same sigma as LPF
+    sigma: null
+
+  - name: "patch_shuffle"
+    patch_size: 16
+    seed: 42
+
+decoding:
+  temperature: 0
+  do_sample: false
+  max_new_tokens: 64
+  num_beams: 1
+
+prompt:
+  template: |
+    {question}
+    A. {choice_A}
+    B. {choice_B}
+    C. {choice_C}
+    D. {choice_D}
+    Answer with the option's letter from the given choices directly.
+
+models:
+  llava_med:
+    name: "LLaVA-Med-1.5"
+    hf_repo: "microsoft/llava-med-v1.5-mistral-7b"
+    precision: "fp16"
+    batch_size: 1
+
+  huatuogpt:
+    name: "HuatuoGPT-Vision-7B"
+    hf_repo: "FreedomIntelligence/HuatuoGPT-Vision-7B"
+    precision: "bf16"
+    batch_size: 1
+
+  medvint:
+    name: "MedVInT-TD"
+    hf_repo: "xmcmic/MedVInT-TD"
+    precision: "fp16"
+    batch_size: 1
+
+output:
+  dir: "./results"
+  save_logits: true
+  save_raw_output: true
+
+seed: 42
+
+hardware:
+  min_gpu_vram_gb: 24
+  recommended_gpu: "A6000 Ada (48GB)"
