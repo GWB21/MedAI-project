@@ -72,6 +72,14 @@ def main():
     # Run inference
     from src.inference import run_inference
 
+    # max_new_tokens: 모델별 설정 > 전역 설정 > 기본값 32
+    model_cfg = config.get("models", {}).get(args.model, {})
+    max_new_tokens = model_cfg.get(
+        "max_new_tokens",
+        config.get("decoding", {}).get("max_new_tokens", 32)
+    )
+    print(f"max_new_tokens: {max_new_tokens}")
+
     patch_cfg = next((p for p in config["perturbations"] if p["name"] == "patch_shuffle"), {})
     df = run_inference(
         model=model,
@@ -82,6 +90,7 @@ def main():
         hpf_sigma=hpf_sigma,
         patch_size=patch_cfg.get("patch_size", 16),
         seed=config.get("seed", 42),
+        max_new_tokens=max_new_tokens,
     )
 
     # Print summary

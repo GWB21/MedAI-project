@@ -118,7 +118,7 @@ class MedVInTModel(BaseMedVQAModel):
     # ------------------------------------------------------------------
     # Inference
     # ------------------------------------------------------------------
-    def inference(self, image: np.ndarray, prompt: str) -> ModelOutput:
+    def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
         pil_image = Image.fromarray(image)
 
         # Prepare image tensor through the model's vision pipeline
@@ -132,13 +132,13 @@ class MedVInTModel(BaseMedVQAModel):
                 raw_text = self.model.generate_long_sentence(
                     input_ids=input_ids,
                     images=image_tensor,
-                    max_new_tokens=64,
+                    max_new_tokens=max_new_tokens,
                 )
             elif hasattr(self.model, "generate"):
                 output_ids = self.model.generate(
                     input_ids=input_ids,
                     images=image_tensor,
-                    max_new_tokens=64,
+                    max_new_tokens=max_new_tokens,
                 )
                 raw_text = self.tokenizer.decode(
                     output_ids[0, input_ids.shape[1] :], skip_special_tokens=True

@@ -49,9 +49,9 @@ def verify_model(model_name: str) -> bool:
         print("  OK - shape:", dummy_image.shape)
 
         # 3. Inference
-        print("[3/4] Running inference...")
+        print("[3/4] Running inference (max_new_tokens=32)...")
         t0 = time.time()
-        output = model.inference(dummy_image, DUMMY_PROMPT)
+        output = model.inference(dummy_image, DUMMY_PROMPT, max_new_tokens=32)
         print(f"  OK - {time.time()-t0:.1f}s")
         print(f"  Raw output: {repr(output.raw_text[:100])}")
         print(f"  Parsed: {output.parsed_answer}")

@@ -23,13 +23,14 @@ class BaseMedVQAModel(ABC):
         pass
 
     @abstractmethod
-    def inference(self, image: np.ndarray, prompt: str) -> ModelOutput:
+    def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
         """
         Run inference on a single image + prompt.
 
         Args:
             image: numpy array (H, W, 3), uint8, RGB
             prompt: Full prompt string with question and choices
+            max_new_tokens: Maximum tokens to generate (32 is enough for MCQ)
 
         Returns:
             ModelOutput with raw_text, parsed_answer, logits

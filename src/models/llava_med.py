@@ -79,7 +79,7 @@ class LLavaMedModel(BaseMedVQAModel):
     # ------------------------------------------------------------------
     # Inference
     # ------------------------------------------------------------------
-    def inference(self, image: np.ndarray, prompt: str) -> ModelOutput:
+    def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
         full_prompt = self._build_prompt(prompt)
         input_ids, image_tensor = self._prepare_inputs(image, full_prompt)
 
@@ -89,7 +89,7 @@ class LLavaMedModel(BaseMedVQAModel):
                 images=image_tensor,
                 do_sample=False,
                 temperature=0,
-                max_new_tokens=64,
+                max_new_tokens=max_new_tokens,
                 num_beams=1,
                 use_cache=True,
             )

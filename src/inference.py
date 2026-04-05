@@ -29,6 +29,7 @@ def run_inference(
     hpf_sigma: Optional[float] = None,
     patch_size: int = 16,
     seed: int = 42,
+    max_new_tokens: int = 32,
 ) -> pd.DataFrame:
     """
     Run inference for all conditions and save results.
@@ -60,6 +61,7 @@ def run_inference(
             sigma=sigma,
             patch_size=patch_size,
             seed=seed,
+            max_new_tokens=max_new_tokens,
         )
         all_results.extend(results)
 
@@ -90,6 +92,7 @@ def _run_single_condition(
     sigma: Optional[float],
     patch_size: int,
     seed: int,
+    max_new_tokens: int = 32,
 ) -> List[dict]:
     results = []
     perturbation_kwargs = {}
@@ -116,7 +119,7 @@ def _run_single_condition(
 
         # Run inference
         try:
-            output = model.inference(perturbed, prompt)
+            output = model.inference(perturbed, prompt, max_new_tokens=max_new_tokens)
         except Exception as e:
             print(f"  [ERROR] {item['image_id']}: {e}")
             output = None

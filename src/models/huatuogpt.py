@@ -50,7 +50,7 @@ class HuatuoGPTVisionModel(BaseMedVQAModel):
     # ------------------------------------------------------------------
     # Inference
     # ------------------------------------------------------------------
-    def inference(self, image: np.ndarray, prompt: str) -> ModelOutput:
+    def inference(self, image: np.ndarray, prompt: str, max_new_tokens: int = 32) -> ModelOutput:
         pil_image = Image.fromarray(image)
 
         # HuatuoGPT-Vision provides a chat() method via trust_remote_code
@@ -61,10 +61,10 @@ class HuatuoGPTVisionModel(BaseMedVQAModel):
                 msgs=[{"role": "user", "content": prompt}],
                 temperature=0,
                 do_sample=False,
-                max_new_tokens=64,
+                max_new_tokens=max_new_tokens,
             )
         else:
-            raw_text = self._manual_inference(pil_image, prompt)
+            raw_text = self._manual_inference(pil_image, prompt, max_new_tokens)
 
         raw_text = raw_text.strip() if isinstance(raw_text, str) else str(raw_text).strip()
         parsed = parse_answer(raw_text)
@@ -77,7 +77,7 @@ class HuatuoGPTVisionModel(BaseMedVQAModel):
             parse_success=parsed is not None,
         )
 
-    def _manual_inference(self, pil_image: Image.Image, prompt: str) -> str:
+    def _manual_inference(self, pil_image: Image.Image, prompt: str, max_new_tokens: int = 32) -> str:
         """Fallback if model doesn't expose a chat() method."""
         from transformers import AutoProcessor
 
@@ -103,7 +103,7 @@ class HuatuoGPTVisionModel(BaseMedVQAModel):
                 **inputs,
                 do_sample=False,
                 temperature=0,
-                max_new_tokens=64,
+                max_new_tokens=max_new_tokens,
                 num_beams=1,
             )
         return processor.decode(
